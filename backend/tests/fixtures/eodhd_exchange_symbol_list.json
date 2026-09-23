@@ -1,0 +1,29 @@
+[
+  {
+    "Code": "AAPL",
+    "Name": "Apple Inc",
+    "Country": "USA",
+    "Exchange": "US",
+    "Currency": "USD",
+    "Type": "Common Stock",
+    "Isin": "US0000000A01"
+  },
+  {
+    "Code": "0700",
+    "Name": "Tencent Holdings Ltd",
+    "Country": "Hong Kong",
+    "Exchange": "HK",
+    "Currency": "HKD",
+    "Type": "Common Stock",
+    "Isin": "KYG00000Z002"
+  },
+  {
+    "Code": "XETF",
+    "Name": "Example Broad Market ETF Trust",
+    "Country": "USA",
+    "Exchange": "US",
+    "Currency": "USD",
+    "Type": "ETF",
+    "Isin": "US0000000E03"
+  }
+]

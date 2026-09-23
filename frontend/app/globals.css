@@ -1,0 +1,98 @@
+@import "tailwindcss";
+/*
+  ---break---
+*/
+@custom-variant dark (&:is(.dark *));
+
+/*
+  Catalyst Radar — operational dark theme. Token reference: DESIGN.md.
+  Tuned for a compact, scan-friendly trading monitor.
+*/
+
+:root {
+  --canvas: #090909;
+  --surface-1: #141414;
+  --surface-2: #1c1c1c;
+  --hairline: #262626;
+  --hairline-soft: #1a1a1a;
+  --ink: #ffffff;
+  --ink-muted: #999999;
+  --accent-blue: #0099ff;
+  --success: #22c55e;
+  --warning: #ff7a3d;
+  --danger: #ff5577;
+  /* Sidebar tokens map to the project's dark palette — the app is always
+     dark (no theme switcher), so the shadcn-default light HSL values are
+     replaced with our canvas/surface/ink/accent tokens directly. */
+  --sidebar: var(--surface-1);
+  --sidebar-foreground: var(--ink);
+  --sidebar-primary: var(--accent-blue);
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: var(--surface-2);
+  --sidebar-accent-foreground: var(--ink);
+  --sidebar-border: var(--hairline);
+  --sidebar-ring: var(--accent-blue);
+}
+
+@theme inline {
+  --color-background: var(--canvas);
+  --color-foreground: var(--ink);
+  --color-card: var(--surface-1);
+  --color-card-foreground: var(--ink);
+  --color-popover: var(--surface-2);
+  --color-popover-foreground: var(--ink);
+  --color-primary: var(--ink);
+  --color-primary-foreground: #000000;
+  --color-secondary: var(--surface-1);
+  --color-secondary-foreground: var(--ink);
+  --color-muted: var(--surface-1);
+  --color-muted-foreground: var(--ink-muted);
+  --color-accent: var(--accent-blue);
+  --color-accent-foreground: #ffffff;
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-destructive: var(--danger);
+  --color-border: var(--hairline);
+  --color-input: var(--hairline);
+  --color-ring: var(--accent-blue);
+  --color-surface-1: var(--surface-1);
+  --color-surface-2: var(--surface-2);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-hairline-soft: var(--hairline-soft);
+
+  --font-sans:
+    "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    Helvetica, Arial, sans-serif;
+  --font-mono:
+    ui-monospace, "SF Mono", "JetBrains Mono", "Fira Code", Menlo, monospace;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 15px;
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+}
+
+* {
+  border-color: var(--color-border);
+}
+
+body {
+  font-family: var(--font-sans);
+  font-feature-settings: "cv11", "ss03";
+  -webkit-font-smoothing: antialiased;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+  background: var(--canvas);
+}
+
+::selection {
+  background: color-mix(in srgb, var(--accent-blue) 35%, transparent);
+}

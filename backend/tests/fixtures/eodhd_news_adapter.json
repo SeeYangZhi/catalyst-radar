@@ -1,0 +1,23 @@
+[
+  {
+    "date": "2026-05-16T09:15:00+00:00",
+    "title": "  Micron unveils next-generation HBM4 memory for AI accelerators  ",
+    "content": "  Micron announced volume production of HBM4 with shipments to major AI accelerator vendors starting next quarter.  ",
+    "link": "https://example.com/micron-hbm4",
+    "symbols": ["MU.US"],
+    "tags": ["Technology"],
+    "sentiment": {"polarity": 0.4, "neg": 0.02, "neu": 0.7, "pos": 0.28}
+  },
+  {
+    "title": "Micron schedules investor day",
+    "content": "Micron will host an investor day.",
+    "link": "https://example.com/micron-investor-day"
+  },
+  {
+    "date": "not-a-date",
+    "title": "Micron item with unparseable timestamp",
+    "content": "Garbage date field straight from the wire.",
+    "link": "https://example.com/micron-garbage-date"
+  },
+  "malformed-row-not-a-dict"
+]

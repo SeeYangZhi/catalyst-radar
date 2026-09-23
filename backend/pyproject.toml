@@ -1,0 +1,73 @@
+[project]
+name = "catalyst-radar"
+version = "0.1.0"
+description = "Catalyst Radar - Telegram-first financial monitoring app"
+readme = "README.md"
+license = "Apache-2.0"
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.34",
+    "sqlmodel>=0.0.22",
+    "sqlalchemy[asyncio]>=2.0.36",
+    "asyncpg>=0.30",
+    "alembic>=1.14",
+    "celery[redis]>=5.4",
+    "redis>=5.2",
+    "structlog>=24.4",
+    "pydantic>=2.10",
+    "pydantic-settings>=2.7",
+    "argon2-cffi>=23.1",
+    "pyjwt>=2.10",
+    "playwright>=1.49",
+    "pypdf>=5.1",
+    "python-multipart>=0.0.20",
+    "httpx>=0.28",
+    "openai>=1.60",
+    "rapidfuzz>=3.10",
+    # akshare wraps Eastmoney's IPO calendar + 受理/问询/上会/注册 review-process
+    # endpoints — sole free source for mainland China IPO discovery. Pin loosely;
+    # historical schema drift between releases is the known failure mode (the
+    # tests/test_akshare_ipo.py wire-format checks catch it early).
+    "akshare>=1.18.0",
+    # tushare Pro — A-share share-unlock schedule (share_float endpoint). The
+    # 120-credit free tier covers what we need; lockup_unlock is already in
+    # the classifier enum but had no feed before.
+    "tushare>=1.4.29",
+    "openpyxl>=3.1.5",
+]
+
+[project.optional-dependencies]
+# Sentry error tracking — opt-in so the base image stays lean. Enable with
+# `uv sync --extra monitoring` and set SENTRY_DSN (see observability.py).
+monitoring = [
+    "sentry-sdk[fastapi,celery]>=2.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+    "pytest-asyncio>=0.25",
+    "anyio>=4.7",
+    "aiosqlite>=0.20",
+    "ruff>=0.8",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["catalyst_radar"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "ASYNC"]
+ignore = ["B008"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]

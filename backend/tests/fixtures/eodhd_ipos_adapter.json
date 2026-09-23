@@ -1,0 +1,31 @@
+{
+  "type": "IPOs",
+  "description": "Historical and upcoming IPOs",
+  "from": "2026-05-01",
+  "to": "2026-08-30",
+  "ipos": [
+    {
+      "code": "N/A",
+      "name": "Example Robotics Ltd",
+      "exchange": "NASDAQ",
+      "currency": "USD",
+      "start_date": "2026-05-22",
+      "filing_date": "2026-04-10",
+      "amended_date": "2026-05-01",
+      "price_from": 18.0,
+      "price_to": 21.0,
+      "offer_price": null,
+      "shares": 25000000,
+      "deal_type": "Expected"
+    },
+    {
+      "code": "1234",
+      "name": "HK Biotech Holdings",
+      "exchange": "HKEX",
+      "currency": "HKD",
+      "start_date": "2026-05-28",
+      "deal_type": "Expected"
+    },
+    42
+  ]
+}

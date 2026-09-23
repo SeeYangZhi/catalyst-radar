@@ -1,0 +1,144 @@
+# Production stack (single host). Example deployment guide: deploy/README.md.
+#
+#   docker compose --env-file backend/.env -f docker-compose.prod.yml up -d
+#
+# Pass --env-file backend/.env: compose interpolates ${POSTGRES_PASSWORD} from a
+# project-level env file (the per-service env_file: only injects into containers).
+#
+# Differences vs docker-compose.dev.yml:
+#   - Postgres/Redis are NOT published to the host (internal network only).
+#   - api / frontend / nginx bind to 127.0.0.1 only; put a TLS edge in front of
+#     nginx on 127.0.0.1:8081 (the example guide uses a Cloudflare Tunnel).
+#   - restart: unless-stopped on every long-lived service.
+#   - Redis runs with AOF persistence so the Celery broker survives restarts.
+#   - frontend + nginx serve the Next.js UI and /api/v1 from one origin.
+name: catalyst-radar
+
+x-backend-env: &backend-env
+  POSTGRES_HOST: postgres
+  DATABASE_URL: postgresql+asyncpg://radar_user:${POSTGRES_PASSWORD:?set in backend/.env}@postgres:5432/radar_db
+  DATABASE_URL_SYNC: postgresql://radar_user:${POSTGRES_PASSWORD:?set in backend/.env}@postgres:5432/radar_db
+  REDIS_URL: redis://redis:6379/0
+  CELERY_BROKER_URL: redis://redis:6379/0
+  CELERY_RESULT_BACKEND: redis://redis:6379/0
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: radar_user
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set in backend/.env}
+      POSTGRES_DB: radar_db
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U radar_user -d radar_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env
+    environment:
+      <<: *backend-env
+    command: >-
+      sh -c "uv run alembic upgrade head &&
+             uv run uvicorn catalyst_radar.main:app --host 0.0.0.0 --port 8000"
+    # Local-only bind for debugging from the host itself. Public traffic arrives
+    # via your TLS edge (e.g. a cloudflared tunnel) to nginx on localhost:8081.
+    ports:
+      - "127.0.0.1:8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  worker:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env
+    environment:
+      <<: *backend-env
+    command: uv run celery -A catalyst_radar.celery_app:celery_app worker --loglevel=info
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  beat:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env
+    environment:
+      <<: *backend-env
+    # --schedule pins celery's PersistentScheduler state file onto a named
+    # volume so last_run_at survives container recreation. Without this the
+    # file lived on the ephemeral container fs and every `up -d --build` deploy
+    # reset it — resetting all timedelta interval timers to "now", which
+    # starves the 6h tasks (eodhd/hkex/catalyst) whenever deploys land more
+    # often than every 6h. With state persisted, an overdue task fires
+    # immediately on boot instead of waiting a fresh full interval.
+    command: uv run celery -A catalyst_radar.celery_app:celery_app beat --loglevel=info --schedule=/var/lib/celerybeat/celerybeat-schedule
+    volumes:
+      - beatdata:/var/lib/celerybeat
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # In the example deployment cloudflared runs as a systemd service on the host
+  # (token-based, installed via
+  # `cloudflared service install <token>`), pointing its public hostname at
+  # nginx on localhost:8081. It is not a compose service — see deploy/README.md.
+
+  # Next.js frontend, fronted by nginx which proxies /api/v1/ to the api
+  # service so the browser sees a single same-origin endpoint.
+  # NEXT_PUBLIC_* values live in frontend/.env.production (read by
+  # `next build` at image-build time) — runtime env can't override them.
+  frontend:
+    build:
+      context: ./frontend
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      - api
+
+  nginx:
+    build:
+      context: ./nginx
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8081:80"
+    depends_on:
+      - api
+      - frontend
+
+volumes:
+  pgdata:
+  redisdata:
+  beatdata:

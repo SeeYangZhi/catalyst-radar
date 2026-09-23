@@ -1,0 +1,104 @@
+name: catalyst-radar
+
+# DATABASE_URL must match the password the pgdata volume was initialized
+# with — postgres only reads POSTGRES_PASSWORD on first init, so a
+# literal here can silently diverge from the volume's stored password
+# (which is exactly how the api ends up with "password authentication
+# failed" after a restart). Source of truth: backend/.env.
+x-backend-env: &backend-env
+  POSTGRES_HOST: postgres
+  DATABASE_URL: postgresql+asyncpg://radar_user:${POSTGRES_PASSWORD:?set in backend/.env}@postgres:5432/radar_db
+  DATABASE_URL_SYNC: postgresql://radar_user:${POSTGRES_PASSWORD:?set in backend/.env}@postgres:5432/radar_db
+  REDIS_URL: redis://redis:6379/0
+  CELERY_BROKER_URL: redis://redis:6379/0
+  CELERY_RESULT_BACKEND: redis://redis:6379/0
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: radar_user
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set in backend/.env}
+      POSTGRES_DB: radar_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U radar_user -d radar_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: ./backend
+    env_file:
+      - ./backend/.env
+    environment:
+      <<: *backend-env
+    command: >-
+      sh -c "uv run alembic upgrade head &&
+             uv run uvicorn catalyst_radar.main:app --host 0.0.0.0 --port 8000"
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  worker:
+    build:
+      context: ./backend
+    env_file:
+      - ./backend/.env
+    environment:
+      <<: *backend-env
+    command: uv run celery -A catalyst_radar.celery_app:celery_app worker --loglevel=info
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+
+  beat:
+    build:
+      context: ./backend
+    env_file:
+      - ./backend/.env
+    environment:
+      <<: *backend-env
+    command: uv run celery -A catalyst_radar.celery_app:celery_app beat --loglevel=info
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      # NEXT_PUBLIC_* are inlined at build time (runtime env has no effect on
+      # the client bundle). The committed .env.production uses a relative
+      # /api/v1 for the nginx-fronted prod stack; the dev stack has no nginx,
+      # so point the browser straight at the api container's published port.
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:8000/api/v1
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+
+volumes:
+  pgdata:

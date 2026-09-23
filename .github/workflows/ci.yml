@@ -1,0 +1,120 @@
+name: CI
+
+# Gates every push and PR on the same checks we run locally:
+#   backend  -> ruff lint + pytest (full suite, network-stubbed)
+#   frontend -> frozen bun install + tsc --noEmit + eslint + vitest
+#   smoke    -> fresh-clone docker compose boot with NO API keys: migrations
+#               apply, api is healthy, the seeded admin can log in, and the
+#               worker/beat stay up (keyless syncs skip instead of crashing)
+# Jobs run in parallel; all must be green to merge.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# A newer push to the same ref cancels the in-flight run.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    name: Backend (ruff + pytest)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: backend/uv.lock
+
+      # uv reads requires-python (>=3.13) and fetches the toolchain itself.
+      - name: Sync dependencies (incl. dev group)
+        run: uv sync --frozen
+
+      - name: Ruff lint
+        run: uv run ruff check .
+
+      - name: Pytest
+        run: uv run pytest -q
+
+  frontend:
+    name: Frontend (typecheck + lint + test)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Typecheck
+        run: bun run typecheck
+
+      - name: Lint
+        run: bun run lint
+
+      - name: Test
+        run: bun run test
+
+  smoke:
+    name: Fresh-install smoke (compose, no API keys)
+    runs-on: ubuntu-latest
+    env:
+      COMPOSE: docker compose --env-file backend/.env -f docker-compose.dev.yml
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create backend/.env from the example (no API keys)
+        run: cp backend/.env.example backend/.env
+
+      - name: Build and boot the stack
+        run: $COMPOSE up -d --build --wait --wait-timeout 300
+
+      - name: API is healthy
+        run: |
+          for i in $(seq 1 30); do
+            curl -fsS http://localhost:8000/api/v1/health && exit 0
+            sleep 2
+          done
+          exit 1
+
+      - name: Seeded admin can log in
+        run: |
+          curl -fsS -X POST http://localhost:8000/api/v1/auth/token \
+            -d "username=admin@radar.local&password=admin123!" | grep -q access_token
+
+      - name: Dashboard is served
+        run: curl -fsS -o /dev/null http://localhost:3000/
+
+      - name: Worker and beat stay up
+        run: |
+          sleep 45
+          for svc in worker beat; do
+            state=$($COMPOSE ps --format '{{.State}}' "$svc")
+            echo "$svc: $state"
+            [ "$state" = "running" ] || exit 1
+          done
+
+      - name: Logs on failure
+        if: failure()
+        run: $COMPOSE logs --tail 150
+
+      - name: Tear down
+        if: always()
+        run: $COMPOSE down -v

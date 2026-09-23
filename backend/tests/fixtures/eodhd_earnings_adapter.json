@@ -1,0 +1,25 @@
+{
+  "type": "Earnings",
+  "description": "Historical and upcoming Earnings",
+  "from": "2026-05-01",
+  "to": "2026-06-30",
+  "earnings": [
+    {
+      "code": "MU.US",
+      "report_date": "2026-06-24",
+      "date": "2026-05-28",
+      "before_after_market": "AfterMarket",
+      "currency": "USD",
+      "actual": null,
+      "estimate": 1.45,
+      "difference": null,
+      "percent": null
+    },
+    {
+      "code": "0700.HK",
+      "report_date": "2026-06-17",
+      "date": "2026-03-31"
+    },
+    "malformed-row-not-a-dict"
+  ]
+}

@@ -1,0 +1,11 @@
+# Environment files with local secrets
+.env
+.env.*
+!.env.example
+!.env.sample
+!.env.template
+
+
+# Local agent tooling state
+.claude/scheduled_tasks.lock
+.claude/settings.local.json

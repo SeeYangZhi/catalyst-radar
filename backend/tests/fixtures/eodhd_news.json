@@ -1,0 +1,38 @@
+[
+  {
+    "date": "2026-05-16T09:15:00+00:00",
+    "title": "Apple unveils next-generation AI inference chip for data centers",
+    "content": "Apple announced a new custom silicon product targeting enterprise AI inference, expanding beyond consumer devices into the data center market with availability later this year.",
+    "link": "https://example.com/apple-ai-chip",
+    "symbols": ["AAPL.US"],
+    "tags": ["Technology"],
+    "sentiment": {"polarity": 0.4, "neg": 0.02, "neu": 0.7, "pos": 0.28}
+  },
+  {
+    "date": "2026-05-16T08:00:00+00:00",
+    "title": "Apple to attend regional university career fair next week",
+    "content": "Apple recruiters will attend a university career fair to meet prospective interns and discuss the internship program.",
+    "link": "https://example.com/apple-career-fair",
+    "symbols": ["AAPL.US"],
+    "tags": ["Careers"],
+    "sentiment": {"polarity": 0.05, "neg": 0.01, "neu": 0.95, "pos": 0.04}
+  },
+  {
+    "date": "2026-05-15T14:30:00+00:00",
+    "title": "Apple announces multi-year cloud partnership with a major enterprise vendor",
+    "content": "Apple entered a multi-year strategic partnership to deliver joint cloud and services offerings, with revenue contribution expected over the medium term.",
+    "link": "https://example.com/apple-cloud-partnership",
+    "symbols": ["AAPL.US"],
+    "tags": ["Business"],
+    "sentiment": {"polarity": 0.3, "neg": 0.03, "neu": 0.75, "pos": 0.22}
+  },
+  {
+    "date": "2026-05-15T11:00:00+00:00",
+    "title": "Market wrap: indices mixed as investors weigh rates; Apple among names cited",
+    "content": "A broad market recap where Apple is mentioned once in passing alongside many other large-cap names, with no company-specific development reported.",
+    "link": "https://example.com/market-wrap",
+    "symbols": ["AAPL.US", "MSFT.US", "AMZN.US"],
+    "tags": ["Markets"],
+    "sentiment": {"polarity": 0.0, "neg": 0.1, "neu": 0.8, "pos": 0.1}
+  }
+]

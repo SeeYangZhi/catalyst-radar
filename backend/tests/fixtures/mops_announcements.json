@@ -1,0 +1,136 @@
+{
+  "code": 200,
+  "message": "查詢成功",
+  "result": {
+    "marketName": "上市公司",
+    "companyId": "9917",
+    "tradingUrl": "https://example.com/mops/trading?co=9917",
+    "financialUrl": "https://example.com/mops/financial?co=9917",
+    "data": [
+      [
+        "9917",
+        "虹橋精密",
+        "115/06/01",
+        "10:38:43",
+        "說明媒體報導",
+        {
+          "parameters": {
+            "companyId": "9917",
+            "marketKind": "sii",
+            "enterDate": "1150601",
+            "serialNumber": "1"
+          },
+          "apiName": "t05st01_detail"
+        }
+      ],
+      [
+        "9917",
+        "虹橋精密",
+        "115/06/02",
+        "17:18:22",
+        "更正本公司115年4月份營業收入資訊",
+        {
+          "parameters": {
+            "companyId": "9917",
+            "marketKind": "sii",
+            "enterDate": "1150602",
+            "serialNumber": "1"
+          },
+          "apiName": "t05st01_detail"
+        }
+      ],
+      [
+        "9917",
+        "虹橋精密",
+        "115/06/02",
+        "18:08:53",
+        "（補充115/5/20公告）代子公司虹橋科技有限公司公告取得\r\n設備之交易對象及金額",
+        {
+          "parameters": {
+            "companyId": "9917",
+            "marketKind": "sii",
+            "enterDate": "1150602",
+            "serialNumber": "2"
+          },
+          "apiName": "t05st01_detail"
+        }
+      ],
+      [
+        "9917",
+        "虹橋精密",
+        "115/06/03",
+        "20:29:07",
+        "代子公司虹橋科技有限公司公告處分有價證券",
+        {
+          "parameters": {
+            "companyId": "9917",
+            "marketKind": "sii",
+            "enterDate": "1150603",
+            "serialNumber": "1"
+          },
+          "apiName": "t05st01_detail"
+        }
+      ],
+      [
+        "9917",
+        "虹橋精密",
+        "115/06/05",
+        "17:17:42",
+        "公告本公司訂定除息基準日",
+        {
+          "parameters": {
+            "companyId": "9917",
+            "marketKind": "sii",
+            "enterDate": "1150605",
+            "serialNumber": "1"
+          },
+          "apiName": "t05st01_detail"
+        }
+      ],
+      [
+        "9917",
+        "虹橋精密",
+        "115/06/09",
+        "20:22:29",
+        "公告本公司股東常會重要\r\n決議事項",
+        {
+          "parameters": {
+            "companyId": "9917",
+            "marketKind": "sii",
+            "enterDate": "1150609",
+            "serialNumber": "1"
+          },
+          "apiName": "t05st01_detail"
+        }
+      ]
+    ],
+    "titles": [
+      {
+        "sub": [],
+        "main": "公司代號"
+      },
+      {
+        "sub": [],
+        "main": "公司名稱"
+      },
+      {
+        "sub": [],
+        "main": "發言日期"
+      },
+      {
+        "sub": [],
+        "main": "發言時間"
+      },
+      {
+        "sub": [],
+        "main": "主旨"
+      },
+      {
+        "sub": [],
+        "main": "詳細資料"
+      }
+    ],
+    "companyAbbreviation": "虹橋精密"
+  },
+  "datetime": "115/06/11 09:00:00"
+}

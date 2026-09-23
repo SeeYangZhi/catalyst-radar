@@ -1,0 +1,16 @@
+{
+  "cik": "0002080841",
+  "name": "BW Industrial Holdings Inc.",
+  "filings": {
+    "recent": {
+      "accessionNumber": [
+        "0001213900-26-040000",
+        "0001213900-26-028518",
+        "0001213900-25-126775"
+      ],
+      "filingDate": ["2026-04-02", "2026-03-17", "2025-12-31"],
+      "form": ["424B4", "FWP", "S-1"],
+      "primaryDocument": ["", "ea0282867-fwp_bwindus.htm", "ea0252378-04.htm"]
+    }
+  }
+}

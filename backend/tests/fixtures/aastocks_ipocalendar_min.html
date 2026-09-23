@@ -1,0 +1,32 @@
+<table class="tblCalendar">
+  <thead>
+    <tr><th class="first vat rel"><div class="today">Today</div></th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <!-- happy-path row: every data-* attribute the parser reads -->
+      <td class="ev" data-symbol="9871" data-desp="Kestrel Robotics" data-listdate="2026/05/18"
+          data-appopen="2026/05/08" data-appclose="2026/05/13" data-anndate="2026/05/15"
+          data-listlabel=" Listing ">
+        <div class="evName">Kestrel Robotics</div>
+      </td>
+      <!-- second good row: subscription-stage cell, no listing date yet -->
+      <td class="ev" data-symbol="09511" data-desp="Harbourline Mobility" data-appopen="2026/05/20"
+          data-appclose="2026/05/26">
+        <div class="evName">Harbourline Mobility</div>
+      </td>
+      <!-- duplicate code for 09871 WITHOUT a list date: richest row must win -->
+      <td class="ev" data-symbol="09871" data-desp="Kestrel Robotics" data-appopen="2026/05/08">
+        <div class="evName">Kestrel Robotics</div>
+      </td>
+      <!-- malformed row: data-symbol present but no company name -> skipped -->
+      <td class="ev" data-symbol="9999" data-desp="">
+        <div class="evName"></div>
+      </td>
+      <!-- malformed row: no data-symbol at all -> ignored by the cell parser -->
+      <td class="ev" data-desp="Ghost Corp"><div class="evName">Ghost Corp</div></td>
+      <!-- non-cell noise the parser must not trip on -->
+      <td class="filler">&nbsp;</td>
+    </tr>
+  </tbody>
+</table>

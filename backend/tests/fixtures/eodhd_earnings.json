@@ -1,0 +1,38 @@
+{
+  "type": "Earnings",
+  "description": "Historical and upcoming Earnings",
+  "from": "2026-05-01",
+  "to": "2026-06-30",
+  "earnings": [
+    {
+      "code": "AAPL.US",
+      "report_date": "2026-05-20",
+      "date": "2026-03-31",
+      "before_after_market": "AfterMarket",
+      "currency": "USD",
+      "actual": null,
+      "estimate": 1.23,
+      "difference": null,
+      "percent": null
+    },
+    {
+      "code": "0700.HK",
+      "report_date": "2026-05-25",
+      "date": "2026-03-31",
+      "before_after_market": null,
+      "currency": "HKD",
+      "actual": null,
+      "estimate": null,
+      "difference": null,
+      "percent": null
+    },
+    {
+      "code": "MSFT.US",
+      "report_date": "2026-06-10",
+      "date": "2026-03-31",
+      "before_after_market": "AfterMarket",
+      "currency": "USD",
+      "estimate": 2.05
+    }
+  ]
+}

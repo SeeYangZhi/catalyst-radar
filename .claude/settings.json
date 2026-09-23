@@ -1,0 +1,16 @@
+{
+  "_doc": "Inspired by docs.ultracite.ai/hooks — auto-format frontend files after AI edits. Backs to the project's own ESLint config since the Ultracite preset's TSX parsing didn't work cleanly with our Next.js + react-day-picker stack.",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh -c 'jq -r .tool_input.file_path 2>/dev/null | grep -q \"/frontend/\" && cd \"$CLAUDE_PROJECT_DIR/frontend\" && bun run lint -- --fix --quiet 2>&1 | tail -10 || true'"
+          }
+        ]
+      }
+    ]
+  }
+}
