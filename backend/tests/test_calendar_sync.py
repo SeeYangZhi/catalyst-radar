@@ -101,6 +101,20 @@ def test_excluded_instruments() -> None:
         "FundVantage Trust",
         "Octave Intelligence plc Class B Ordinary Shares When Issued",
         "iShares Flexible Equity Active ETF",
+        # Fund registrants / ETPs without an "ETF" token (e.g. every new
+        # Dimensional ETF lists under the trust's corporate name).
+        "DFA Investment Dimensions Group Inc.",
+        "Professionally Managed Portfolios",
+        "American Strategic Income Portfolio Inc Ii",
+        "Direxion Daily CSI 300 China A Share Bear 1X Shares",
+        "ProShares Ultra QQQ Equal Weight",
+        "Eos Energy Enterprises, Inc. Right",
+        # SPACs named without "acquisition".
+        "General Catalyst Global Resilience Merger Corp. Class A Ordinary Shares",
+        "Churchill Capital Corp XII Class A Ordinary Shares",
+        "Gores Holdings XI, Inc. Class A Ordinary Shares",
+        "Long Table Growth Corp. Class A Ordinary Shares",
+        "Yorkville International Capital Corp. Class A Ordinary Shares",
     ]
     for name in drop:
         assert _etf_trust_indicators(name) is True, name
@@ -117,6 +131,14 @@ def test_excluded_instruments() -> None:
         "United Airlines Holdings",
         "Sunshine Silver Mining & Refining Company",
         "Optimi Health Corp. Common Shares",
+        # Real listings that share words with the new fund / SPAC rules.
+        "SK Hynix Inc. American Depositary Shares",
+        "IQM Quantum Computers Oyj American Depositary Shares",
+        "American Realty Capital Properties Inc",
+        "Capital Associates Inc",
+        "Investment Technology Group Inc",
+        "Offerpad Solutions Inc. Class A Common Stock",
+        "Air Water Ventures Limited Ordinary Shares",
         None,
         "",
     ]

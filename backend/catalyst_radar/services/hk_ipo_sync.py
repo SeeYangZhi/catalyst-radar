@@ -146,6 +146,7 @@ async def sync_hk_ipos(
         # 1. ETF/Trust exclusion
         if exclude_etfs and _etf_trust_indicators(event.company_name):
             filtered_out["etf"] += 1
+            await notif_repo.skip_pending_for_event(event.id, "excluded_instrument")
             continue
 
         # 2. Exchange filter

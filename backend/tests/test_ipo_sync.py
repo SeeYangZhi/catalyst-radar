@@ -358,3 +358,26 @@ async def test_industry_keyword_filter_respected(db_session: AsyncSession) -> No
     notif = (await db_session.execute(select(Notification))).scalar_one()
     event = await db_session.get(Event, notif.event_id)
     assert event.symbol == "CHIP.US"
+
+
+
+async def test_excluded_instrument_recalls_alert_queued_earlier(
+    db_session: AsyncSession,
+) -> None:
+    """A fund listing queued before it was recognised (exclusion off, or
+    before the rules caught it) must not still go out: the next sync that
+    excludes it marks its pending notification skipped."""
+    cfg = ConfigRepository(db_session)
+    await cfg.set("ipo_exclude_etfs_trusts", "false")
+    row = _us_row(code="DCOR.US", name="DFA Investment Dimensions Group Inc.", exchange="NYSE")
+    adapter = _EodhdStub([row])
+
+    s1 = await sync_ipos(db_session, adapter=adapter)
+    assert s1.notifications_created == 1
+
+    await cfg.set("ipo_exclude_etfs_trusts", "true")
+    s2 = await sync_ipos(db_session, adapter=adapter)
+    assert (s2.matched, s2.notifications_created) == (0, 0)
+
+    n = (await db_session.execute(select(Notification))).scalar_one()
+    assert (n.status, n.skip_reason) == ("skipped", "excluded_instrument")

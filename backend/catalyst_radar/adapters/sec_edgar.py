@@ -23,6 +23,9 @@ _FTS = "https://efts.sec.gov/LATEST/search-index"
 _SUB = "https://data.sec.gov/submissions/CIK{cik10}.json"
 _ARCHIVE = "https://www.sec.gov/Archives/edgar/data/{cik}/{acc}/{doc}"
 _FORMS = ("424B4", "424B1", "424B3", "S-1/A", "S-1", "F-1/A", "F-1", "497", "485BPOS", "485APOS")
+# Registration forms only registered investment companies (funds / ETFs)
+# file. A listing that resolves to one of these is not an operating company.
+FUND_FORMS = frozenset({"497", "485BPOS", "485APOS"})
 
 # Where the business description tends to start in a prospectus.
 _ANCHORS = (
