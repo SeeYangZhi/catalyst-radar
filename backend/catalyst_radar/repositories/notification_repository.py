@@ -148,6 +148,17 @@ class NotificationRepository:
             .values(dispatch_after=utcnow())
         )
 
+    async def skip_pending_for_event(self, event_id: int, reason: str) -> int:
+        """Recall every not-yet-delivered notification for an event (pending,
+        or failed-and-retryable) by marking it skipped. Returns the count."""
+        result = await self.session.execute(
+            update(Notification)
+            .where(Notification.event_id == event_id)
+            .where(Notification.status.in_(["pending", "failed"]))
+            .values(status="skipped", skip_reason=reason)
+        )
+        return result.rowcount or 0
+
     async def get_sent_by_event(self, event_id: int) -> list[Notification]:
         """All editable Telegram messages already sent for an event.
 

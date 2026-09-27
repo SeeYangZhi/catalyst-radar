@@ -13,7 +13,7 @@ from datetime import timedelta
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from catalyst_radar.adapters.sec_edgar import SecEdgarAdapter
+from catalyst_radar.adapters.sec_edgar import FUND_FORMS, SecEdgarAdapter
 from catalyst_radar.logging import get_logger
 from catalyst_radar.models.base import utcnow
 from catalyst_radar.models.event import Event
@@ -21,7 +21,7 @@ from catalyst_radar.repositories.notification_repository import NotificationRepo
 from catalyst_radar.repositories.source_repository import SourceRunRepository
 from catalyst_radar.services.alerts import _deal_size
 from catalyst_radar.services.ipo_summarizer import IpoSummarizer
-from catalyst_radar.services.ipo_sync import select_enrich_candidates
+from catalyst_radar.services.ipo_sync import _set_profile, select_enrich_candidates
 
 log = get_logger(__name__)
 
@@ -81,8 +81,16 @@ async def enrich_us_ipos(
 
     from catalyst_radar.services.ipo_describe import describe_ipo_event
 
+    # Listings whose resolved registration form is fund-only (497 / 485*):
+    # registered investment companies, i.e. ETF / mutual-fund share listings
+    # that EODHD's IPO calendar reports as IPOs.
+    fund_ids: set[int] = set()
+
     async def _fetch(e: Event) -> dict | None:
-        return await adapter.fetch_summary(e.company_name or "")
+        filing = await adapter.fetch_summary(e.company_name or "")
+        if filing and filing.get("form") in FUND_FORMS and e.id is not None:
+            fund_ids.add(e.id)
+        return filing
 
     enriched = described = errors = 0
     for event in candidates:
@@ -115,6 +123,15 @@ async def enrich_us_ipos(
         )
         described += 1 if outcome.described else 0
         errors += outcome.errors
+        if event.id in fund_ids:
+            # Authoritative: ipo_sync excludes it from now on (when the ETF
+            # exclusion is on), and anything already queued is recalled
+            # before this task's dispatch step runs.
+            _set_profile(event, "registrant_type", "fund")
+            if eff.ipo_exclude_etfs_trusts:
+                await NotificationRepository(session).skip_pending_for_event(
+                    event.id, "fund_registrant"
+                )
         session.add(event)
         enriched += 1
 

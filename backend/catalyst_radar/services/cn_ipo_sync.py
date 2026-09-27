@@ -135,6 +135,7 @@ async def sync_cn_ipos(
 
         if exclude_etfs and _etf_trust_indicators(event.company_name):
             filtered_out["etf"] += 1
+            await notif_repo.skip_pending_for_event(event.id, "excluded_instrument")
             continue
 
         if not _exchange_allowed(event.exchange, exchange_filter):

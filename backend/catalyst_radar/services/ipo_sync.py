@@ -96,7 +96,10 @@ _EXCLUDED_TOKENS = frozenset(
         "funds",
         "investors",
         "investments",
+        "right",
         "rights",
+        "merger",
+        "portfolios",
         "series",
         "trust",
         "unit",
@@ -106,10 +109,39 @@ _EXCLUDED_TOKENS = frozenset(
     }
 )
 
-# Multi-word phrases (no clean token boundary). Kept tiny on purpose.
-_EXCLUDED_PHRASES = ("when issued",)
+# Multi-word phrases (no clean token boundary). Fund-trust registrants that
+# file under corporate-sounding names ("DFA Investment Dimensions Group
+# Inc." lists every new Dimensional ETF) are only catchable by phrase.
+_EXCLUDED_PHRASES = (
+    "when issued",
+    "investment dimensions",
+    "managed portfolios",
+    "income portfolio",
+)
+
+# Fund sponsors whose listings are always funds/ETPs, even when the product
+# name carries no "ETF" token ("ProShares Ultra QQQ Equal Weight").
+_FUND_SPONSOR_TOKENS = frozenset(
+    {"proshares", "direxion", "graniteshares", "ishares", "spdr", "invesco"}
+)
+
+# Series numerals ("Churchill Capital Corp XII", "Tidal Trust II") mark SPAC
+# and fund-trust series; real operating companies essentially never carry
+# them. "i"/"x" are left out: too likely to be a genuine word or brand.
+_SERIES_NUMERALS = frozenset(
+    {"ii", "iii", "iv", "v", "vi", "vii", "viii", "ix", "xi", "xii", "xiii",
+     "xiv", "xv", "xvi", "xvii", "xviii", "xix", "xx"}
+)
 
 _TOKEN_SPLIT_RE = re.compile(r"[^a-z0-9]+")
+# Leveraged / inverse products: "2x Long", "Bear 1X Shares".
+_LEVERAGE_RE = re.compile(r"\b\d+(?:\.\d+)?x\b")
+# SPAC share class without the word "acquisition": "Long Table Growth Corp.
+# Class A Ordinary Shares", "General Catalyst ... Merger Corp. Class A ...".
+_SPAC_CLASS_RE = re.compile(
+    r"\b(?:capital|growth|merger|partners|alliance)\b.*"
+    r"\b(?:corp|corporation|inc|holdings)\b.*\bclass a ordinary shares\b"
+)
 
 
 def _etf_trust_indicators(name: str | None) -> bool:
@@ -124,8 +156,20 @@ def _etf_trust_indicators(name: str | None) -> bool:
     low = name.lower()
     if any(p in low for p in _EXCLUDED_PHRASES):
         return True
+    if _LEVERAGE_RE.search(low) or _SPAC_CLASS_RE.search(low):
+        return True
     tokens = _TOKEN_SPLIT_RE.split(low)
-    return any(t in _EXCLUDED_TOKENS for t in tokens)
+    return any(
+        t in _EXCLUDED_TOKENS or t in _FUND_SPONSOR_TOKENS or t in _SERIES_NUMERALS
+        for t in tokens
+    )
+
+
+def _is_excluded_instrument(event: Event) -> bool:
+    """Name heuristics OR an authoritative signal from enrichment: EDGAR
+    resolved a fund-only registration form (497 / 485*) for this listing."""
+    prof = (event.payload or {}).get("profile") or {}
+    return prof.get("registrant_type") == "fund" or _etf_trust_indicators(event.company_name)
 
 
 def _industry_matches(description: str | None, keywords: list[str]) -> bool:
@@ -386,8 +430,11 @@ async def sync_ipos(
 
         # --- New filters ---
         # 1. ETF/Trust exclusion
-        if exclude_etfs and _etf_trust_indicators(event.company_name):
+        if exclude_etfs and _is_excluded_instrument(event):
             filtered_out["etf"] += 1
+            # Also recall anything queued before the listing was recognised
+            # as a fund/SPAC (earlier sync, or before the rules caught it).
+            await notif_repo.skip_pending_for_event(event.id, "excluded_instrument")
             continue
 
         # 2. Exchange filter

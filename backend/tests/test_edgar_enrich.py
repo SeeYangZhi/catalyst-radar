@@ -117,6 +117,7 @@ async def test_enrich_us_ipos_writes_profile_and_is_idempotent(
     assert prof["market_cap"] == 4.2e8
     assert prof["deal_size"] == 20 * 1_000_000  # computed from price × shares
     assert prof["source"] == "sec_edgar" and prof["checked"] is True
+    assert "registrant_type" not in prof  # an S-1 filer is an operating company
 
     # Idempotent: already checked -> not a candidate again.
     s2 = await enrich_us_ipos(db_session, adapter=_StubAdapter(), summarizer=_StubSummarizer())
@@ -248,3 +249,51 @@ async def test_enrich_disabled(db_session: AsyncSession) -> None:
     await db_session.commit()
     out = await enrich_us_ipos(db_session, adapter=_StubAdapter(), summarizer=_StubSummarizer())
     assert (out.candidates, out.enriched) == (0, 0)
+
+
+
+class _FundFormAdapter(SecEdgarAdapter):
+    """EDGAR resolves a fund-only form (497): a registered investment company."""
+
+    async def fetch_summary(self, company_name: str) -> dict | None:
+        return {
+            "summary": "The Portfolio is designed to purchase a broad group of securities.",
+            "filing_url": "https://sec.gov/fund.htm",
+            "form": "497",
+            "filing_date": "2026-09-20",
+            "cik": "2",
+        }
+
+
+async def test_fund_form_flags_registrant_and_recalls_pending_alert(
+    db_session: AsyncSession,
+) -> None:
+    from catalyst_radar.models.notification import Notification
+    from catalyst_radar.repositories.config_repository import ConfigRepository
+
+    await ConfigRepository(db_session).set("ipo_exclude_etfs_trusts", "true")
+    ev = Event(
+        event_type="ipo",
+        source_name="eodhd",
+        source_event_id="eodhd:ipo:NEWF.US",
+        dedup_key="newf",
+        symbol="NEWF",
+        exchange="NYSE",
+        country="US",
+        company_name="Northwind Capital Group Inc.",  # no fund word in the name
+        event_date=utcnow(),
+        payload={},
+    )
+    db_session.add(ev)
+    await db_session.flush()
+    db_session.add(
+        Notification(event_id=ev.id, channel="telegram", dedup_key="newf:7", status="pending")
+    )
+    await db_session.commit()
+
+    await enrich_us_ipos(db_session, adapter=_FundFormAdapter(), summarizer=_StubSummarizer())
+
+    ev = (await db_session.execute(select(Event).where(Event.symbol == "NEWF"))).scalar_one()
+    assert ev.payload["profile"]["registrant_type"] == "fund"
+    n = (await db_session.execute(select(Notification))).scalar_one()
+    assert (n.status, n.skip_reason) == ("skipped", "fund_registrant")
